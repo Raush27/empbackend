@@ -6,6 +6,7 @@ const {
     updateEmployee,
     markAttendance,
     getAttendanceRecords,
+    getMonthlyAttendance,
 } = require("../controller/employeeController");
 const auth = require("../middleware/auth");
 const role = require("../middleware/role");
@@ -13,7 +14,7 @@ const {
     requestLeave,
     updateLeaveStatus,
     getLeaveRequests,
-} = require("Backend-app/controller/leaveController");
+} = require("../controller/leaveController");
 
 // @route   GET api/employees
 // @desc    Get all employees

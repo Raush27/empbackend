@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
             name,
             email,
             password,
-            role: role || "employee", // Assign role or default to 'user'
+            role: role
         });
 
         await user.save();
@@ -37,7 +37,7 @@ exports.register = async (req, res) => {
             { expiresIn: "1h" },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token });
+                res.json({ token,user});
             }
         );
     } catch (err) {
@@ -53,16 +53,18 @@ exports.login = async (req, res) => {
     try {
         let user = await User.findOne({ email });
 
+        // Check if user exists
         if (!user) {
-            return res.status(400).json({ msg: "Invalid Credentials" });
+            return res.status(400).json({ status: 'error', message: "Invalid Credentials" });
         }
 
+        // Check if password matches
         const isMatch = await user.matchPassword(password);
-
         if (!isMatch) {
-            return res.status(400).json({ msg: "Invalid Credentials" });
+            return res.status(400).json({ status: 'error', message: "Invalid Credentials" });
         }
 
+        // Prepare payload with user details excluding password
         const payload = {
             user: {
                 id: user.id,
@@ -70,20 +72,31 @@ exports.login = async (req, res) => {
             },
         };
 
+        // Generate JWT token
         jwt.sign(
             payload,
             process.env.JWT_SECRET,
             { expiresIn: "1h" },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token });
+
+                // Remove password before sending user data
+                const userWithoutPassword = {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role,
+                };
+
+                res.status(200).json({ status: true, token, user: userWithoutPassword });
             }
         );
     } catch (err) {
         console.error(err.message);
-        res.status(500).send("Server error");
+        res.status(500).json({ status: 'error', message: "Server error" });
     }
 };
+
 
 // Get the authenticated user's data
 exports.getUser = async (req, res) => {
